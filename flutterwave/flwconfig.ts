@@ -1,5 +1,4 @@
 import axios from "axios";
-import { error } from "console";
 
 const baseURL = "https://api.flutterwave.com/v3/top-bill-categories"; // Add country code
 
@@ -7,7 +6,7 @@ export const fetchBillCategories = async () => {
   try {
     const response = await axios.get(baseURL, {
       headers: {
-        Authorization: `Bearer FLWSECK_TEST-9bca0e857074c9d01f882cf8ad894daf-X`, // Replace with your Flutterwave Secret Key
+        Authorization: `Bearer ${process.env.FLW_SECRET}`, // Replace with your Flutterwave Secret Key
       },
       params: {
         country: "NG", // Ensure the country code is correct and added here
@@ -50,7 +49,7 @@ export const payBill = async (
       },
       {
         headers: {
-          Authorization: `Bearer FLWSECK_TEST-9bca0e857074c9d01f882cf8ad894daf-X`, // Replace with your Flutterwave Secret Key
+          Authorization: `Bearer ${process.env.FLW_SECRET}`, // Replace with your Flutterwave Secret Key
         },
       }
     );
@@ -89,6 +88,6 @@ export const buyAirtime = () => {
       }
     })
     .catch((error) => {
-      console.log("Error fetching categories");
+      console.log("Error fetching categories", error);
     });
 };
