@@ -3,7 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const HomeHeader = () => {
+interface HeaderProps {
+  userName?: string;
+  profileImage?: string;
+}
+const HomeHeader: React.FC = () => {
   const [userData, setUserData] = useState<any>(null);
   const [Error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -48,9 +52,7 @@ const HomeHeader = () => {
           style={styles.userProfilePicture}
           // resizeMode="contain"
         />
-        <Text style={{ marginLeft: 5, color: "white" }}>
-          Hi, {userData?.fullname}
-        </Text>
+        <Text style={{ marginLeft: 5, color: "white" }}>Hi, Yusuff</Text>
       </View>
 
       <Ionicons name="notifications-circle" size={40} color={"white"} />

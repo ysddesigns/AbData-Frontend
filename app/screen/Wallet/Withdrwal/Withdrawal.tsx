@@ -8,6 +8,7 @@ import { router } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useWallet } from "@/hooks/useWallet";
+import formattedBalance from "@/util/functions";
 const Text = ThemedText;
 const View = ThemedView;
 
@@ -20,6 +21,8 @@ interface RedirectParams {
 const Withdrawal: React.FC = () => {
   const { walletBalance, setWalletBalance } = useWallet();
   const [amount, setAmount] = useState("");
+  const [selectedAmount, setSelectedAmount] = useState();
+
   const [transactionRef, setTransactionRef] = useState<string>("");
 
   // Generate a stable transaction reference when the component mounts
@@ -72,6 +75,10 @@ const Withdrawal: React.FC = () => {
       router.push("/screen/pages/payment-error");
     }
   };
+  const onStaticAmountPress = (value: string) => {
+    setAmount(value);
+    setSelectedAmount(value);
+  };
 
   return (
     <View>
@@ -87,44 +94,35 @@ const Withdrawal: React.FC = () => {
         selectionColor={"white"}
       />
       <View style={styles.staticAmountContainer}>
-        <Pressable style={styles.staticAmount} onPress={() => setAmount("500")}>
-          <Text style={styles.text}>₦500</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("1000")}
-        >
-          <Text style={styles.text}>₦1000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("2000")}
-        >
-          <Text style={styles.text}>₦2000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("5000")}
-        >
-          <Text style={styles.text}>₦5000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("10000")}
-        >
-          <Text style={styles.text}>₦10000</Text>
-        </Pressable>
+        {["500", "1000", "2000", "5000", "10000"].map((value) => (
+          <Pressable
+            key={value}
+            style={[
+              styles.staticAmount,
+              {
+                borderColor: selectedAmount === value ? "green" : "grey",
+                backgroundColor:
+                  selectedAmount === value ? "green" : "transparent",
+              },
+            ]}
+            onPress={() => onStaticAmountPress(value)}
+          >
+            <Text style={styles.staticAmountText}>₦{value}</Text>
+          </Pressable>
+        ))}
       </View>
       {/* Display the selected amount */}
       <View style={styles.amountDisplay}>
-        <Text style={styles.amountDisplayText}>withdraw ₦{amount}</Text>
+        <Text style={styles.amountDisplayText}>
+          withdraw ₦{formattedBalance(amount)}
+        </Text>
       </View>
       {/* Pay with fluttterwave button */}
-      <PayWithFlutterwave
+      {/* <PayWithFlutterwave
         onRedirect={handleOnRedirect}
         options={{
           tx_ref: transactionRef,
-          authorization: "FLWPUBK_TEST-eacc9b3006a5621ce9765c1de816249b-X",
+          authorization: `{$process.env.FLW_SECRET}`,
           customer: {
             email: "yusufbyusufgwarmai@gmail.com",
           },
@@ -132,7 +130,7 @@ const Withdrawal: React.FC = () => {
           currency: "NGN",
           payment_options: "card",
         }}
-      />
+      /> */}
     </View>
   );
 };
@@ -151,6 +149,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
+  },
+  staticAmountText: {
+    // color: "white",
   },
   staticAmount: {
     borderRadius: 7,

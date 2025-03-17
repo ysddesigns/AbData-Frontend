@@ -3,10 +3,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { text } from "stream/consumers";
+import { useWallet } from "@/hooks/useWallet";
 
 const RootApp = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  // const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const { isLoggedIn, setIsLoggedIn } = useWallet();
 
   useEffect(() => {
     const checkLogin = async () => {

@@ -1,14 +1,17 @@
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ThemedText } from "@/components/ThemedText";
+import { ThemedText as Text } from "@/components/ThemedText";
 import { useWallet } from "@/hooks/useWallet";
-
-const Text = ThemedText;
+import formattedBalance from "@/util/functions";
+import { Colors } from "@/constants/Colors";
+import { ThemedView as View } from "@/components/ThemedView";
 
 const Profile = () => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme || "light"];
   const { walletBalance } = useWallet();
   const [userData, setUserData] = useState<any>(null);
 
@@ -32,7 +35,6 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      // await signOut(auth);
       // await AsyncStorage.removeItem("userToken");
       console.log("user logout!");
 
@@ -48,7 +50,7 @@ const Profile = () => {
         <Text style={styles.headerText}>Profile</Text>
         {/* Settings icon */}
         <Pressable style={styles.settings}>
-          <Ionicons name="settings-outline" size={30} color={"blue"} />
+          <Ionicons name="settings-outline" size={30} color={theme.icon} />
         </Pressable>
       </View>
 
@@ -74,10 +76,10 @@ const Profile = () => {
         <Text style={styles.sectionTitle}>Account Overview</Text>
         <View style={styles.accountDetails}>
           <Text style={styles.balanceText}>
-            Balance: ₦{walletBalance.toFixed(2)}
+            Balance: ₦{formattedBalance(walletBalance)}
           </Text>
-          <Text style={styles.otherDetails}>Total Transactions: 52</Text>
         </View>
+        <Text style={styles.otherDetails}>Total Transactions: 52</Text>
       </View>
 
       {/* Options / Action Buttons */}
@@ -174,6 +176,7 @@ const styles = StyleSheet.create({
   accountDetails: {
     flexDirection: "row",
     justifyContent: "space-between",
+    backgroundColor: "transparent",
   },
   balanceText: {
     fontSize: 16,

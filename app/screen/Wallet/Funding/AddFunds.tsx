@@ -5,6 +5,8 @@ import { PayWithFlutterwave } from "flutterwave-react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useWallet } from "@/hooks/useWallet";
+import { Ionicons } from "@expo/vector-icons";
+import formattedBalance from "@/util/functions";
 
 const Text = ThemedText;
 const View = ThemedView;
@@ -14,9 +16,12 @@ interface RedirectParams {
   tx_ref: string;
 }
 
+interface PropsType {}
+
 const PayWithFlutter: React.FC = () => {
   const { walletBalance, setWalletBalance } = useWallet();
   const [amount, setAmount] = useState("");
+  const [selectedAmount, setSelectedAmount] = useState<string>("");
   const [transactionRef, setTransactionRef] = useState<string>("");
 
   // Generate a stable transaction reference when the component mounts
@@ -75,58 +80,53 @@ const PayWithFlutter: React.FC = () => {
     }
   };
 
+  const onStaticAmountPress = (value: string) => {
+    setAmount(value);
+    setSelectedAmount(value);
+  };
+
   return (
     <View>
       <Text>Amount</Text>
       <TextInput
         placeholder="Amount"
-        keyboardType="numeric"
+        keyboardType="number-pad"
         value={amount}
         onChangeText={(value) => setAmount(value)} //update state on input change
-        // placeholderTextColor={"white"}
         style={styles.input}
         autoFocus
         selectionColor={"white"}
       />
       <View style={styles.staticAmountContainer}>
-        <Pressable style={styles.staticAmount} onPress={() => setAmount("500")}>
-          <Text style={styles.staticAmountText}>₦500</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("1000")}
-        >
-          <Text style={styles.staticAmountText}>₦1000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("2000")}
-        >
-          <Text style={styles.staticAmountText}>₦2000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("5000")}
-        >
-          <Text style={styles.staticAmountText}>₦5000</Text>
-        </Pressable>
-        <Pressable
-          style={styles.staticAmount}
-          onPress={() => setAmount("10000")}
-        >
-          <Text style={styles.staticAmountText}>₦10000</Text>
-        </Pressable>
+        {["500", "1000", "2000", "5000", "10000"].map((value) => (
+          <Pressable
+            key={value}
+            style={[
+              styles.staticAmount,
+              {
+                borderColor: selectedAmount === value ? "green" : "grey",
+                backgroundColor:
+                  selectedAmount === value ? "green" : "transparent",
+              },
+            ]}
+            onPress={() => onStaticAmountPress(value)}
+          >
+            <Text style={styles.staticAmountText}>₦{value}</Text>
+          </Pressable>
+        ))}
       </View>
       {/* Display the selected amount */}
       <View style={styles.amountDisplay}>
-        <Text style={styles.amountDisplayText}>Deposit ₦{amount}</Text>
+        <Text style={styles.amountDisplayText}>
+          Deposit ₦{formattedBalance(amount)}
+        </Text>
       </View>
       {/* Pay with fluttterwave button */}
-      <PayWithFlutterwave
+      {/* <PayWithFlutterwave
         onRedirect={handleOnRedirect}
         options={{
           tx_ref: transactionRef,
-          authorization: "FLWPUBK_TEST-6528752deb191a90f99945abddfd6166-X", //public key
+          authorization: `${process.env.FLW_SECRET}`, //public key
           customer: {
             email: "yusufbyusufgwarmai@gmail.com",
           },
@@ -134,7 +134,7 @@ const PayWithFlutter: React.FC = () => {
           currency: "NGN",
           payment_options: "card",
         }}
-      />
+      /> */}
     </View>
   );
 };
@@ -178,6 +178,9 @@ const styles = StyleSheet.create({
   },
   staticAmountText: {
     // color: "white",
+  },
+  checkmark: {
+    backgroundColor: "white",
   },
 });
 

@@ -6,6 +6,7 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -14,15 +15,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useWallet } from "@/hooks/useWallet";
+import { Colors } from "@/constants/Colors";
 
 const Text = ThemedText;
 const View = ThemedView;
 
 const Login = () => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme || "light"];
   const [emailOrPhone, setEmailOrPhone] = useState("");
-  const [password, setPassword] = useState("");
+  // const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState("");
+
+  const { username, setUsername, password, setPassword } = useWallet();
 
   const [Error, setError] = useState("");
 
@@ -40,21 +47,19 @@ const Login = () => {
     setIsLoading(true);
     // Placeholder for successful login
     try {
-      const user = { email: emailOrPhone, password };
-      console.log(user);
-
       const res = await axios.post(
-        "https://abdata-backend.onrender.com/api/auth/login",
-        user
+        "https://auth-backend-8fxa.onrender.com/api/auth/login",
+        { credential: emailOrPhone, password }
       );
       // successful login
-      console.log("login successful", user);
+      console.log("login successful");
       // store token in asyncstorage
       // await AsyncStorage.setItem("userToken", user.uid);
       router.replace("/(tabs)/home");
       return res.data;
     } catch (error) {
-      console.log("error creating user", error);
+      const errorMsg = (error as any).response?.data?.message;
+      Alert.alert("Error", errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +71,12 @@ const Login = () => {
       <Text style={styles.headerText}>Login</Text>
 
       {/* Email or Phone Input */}
-      <View style={styles.inputContainer}>
+      <View
+        style={[
+          styles.inputContainer,
+          { backgroundColor: theme.inputBackground },
+        ]}
+      >
         <Ionicons name="mail-outline" size={20} color="#007AFF" />
         <TextInput
           placeholder="Email or Phone"
@@ -78,7 +88,12 @@ const Login = () => {
       </View>
 
       {/* Password Input */}
-      <View style={styles.inputContainer}>
+      <View
+        style={[
+          styles.inputContainer,
+          { backgroundColor: theme.inputBackground },
+        ]}
+      >
         <Ionicons name="lock-closed-outline" size={20} color="#007AFF" />
         <TextInput
           placeholder="Password"
@@ -108,6 +123,7 @@ const Login = () => {
       {/* Login Button */}
       <TouchableOpacity
         style={[styles.loginButton, isLoading && styles.isdisableButton]}
+        // onPress={() => router.push("/home")}
         onPress={handleLogin}
         disabled={isLoading}
       >

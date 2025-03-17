@@ -1,8 +1,6 @@
-import { Alert, StyleSheet, Text, View } from "react-native";
-import React, { useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
+import React from "react";
 import HomeCardItem from "./HomeCardsItem";
-import { router } from "expo-router";
-import { buyAirtime } from "@/flutterwave/flwconfig";
 
 const HomeMenu = () => {
   const handlePress = () => {
@@ -13,19 +11,11 @@ const HomeMenu = () => {
       <View style={styles.itemsContainer}>
         <HomeCardItem
           iconName={"wallet"}
-          buttonName="Data"
+          buttonName="Bills"
           size={30}
-          color="blue"
-          onpress={() => router.push("/screen/Transactions/Data/BuyData")}
-        />
-        <HomeCardItem
-          iconName={"wallet"}
-          buttonName="Airtime"
-          size={30}
-          color="orange"
-          onpress={() =>
-            router.push("/screen/Transactions/Airtime/AirtimePurchase")
-          }
+          color="purple"
+          // onpress={() => router.push("/(auth)/login")}
+          onpress={handlePress}
         />
         <HomeCardItem
           iconName={"wallet"}
@@ -33,14 +23,6 @@ const HomeMenu = () => {
           size={30}
           color="brown"
           // onpress={() => router.push("/screen/Wallet/Funding/PaymentSuccess")}
-          onpress={handlePress}
-        />
-        <HomeCardItem
-          iconName={"wallet"}
-          buttonName="Bills"
-          size={30}
-          color="purple"
-          // onpress={() => router.push("/(auth)/login")}
           onpress={handlePress}
         />
         <HomeCardItem

@@ -1,5 +1,6 @@
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { sendEmailOtp, sendOtp, verifyEmailOtp, verifyOtp } from "@/util/api";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,44 +8,97 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-
 const OtpScreen = () => {
-  const [otp, setOtp] = useState(["", "", "", ""]); // To store each digit of the OTP
+  const [otp, setOtp] = useState(["", "", "", "", ""]); // To store each digit of the OTP
+  const { phone, email } = useLocalSearchParams();
+  const otpInputs = useRef<Array<TextInput | null>>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOtpChange = (value: string, index: number) => {
+    if (isNaN(Number(value))) return;
+
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
     setOtp(updatedOtp);
+
+    // Auto focus next field
+    if (value && index < otp.length - 1) {
+      otpInputs.current[index + 1]?.focus();
+    }
+
+    if (updatedOtp.join("").length === 5) {
+      handleSubmitOtp(updatedOtp.join(""));
+    }
   };
 
-  const handleSubmitOtp = () => {
-    const enteredOtp = otp.join(""); // Combine the digits to form the complete OTP
-    if (enteredOtp.length === 4) {
-      // Verify OTP logic (Replace this with actual backend verification)
+  const handleBackSpace = (index: number) => {
+    if (otp[index] === "" && index > 0) {
+      otpInputs.current[index - 1]?.focus();
+    }
+    const updatedOtp = [...otp];
+    updatedOtp[index] = "";
+    setOtp(updatedOtp);
+  };
 
+  const handleSubmitOtp = async (enteredOtp = otp.join("")) => {
+    if (otp.some((digit) => digit === "")) {
+      Alert.alert("Invalid OTP", "Please enter a valid 5-digit OTP.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000)); //simulate netwrork delay
+      if (phone) {
+        await verifyOtp(phone, enteredOtp);
+      } else if (email) {
+        await verifyEmailOtp(email, enteredOtp);
+      }
       // alerting the user for better user experience
       Alert.alert("OTP Verified", "You have successfully verified your OTP.");
 
       // navigate to password reset page after successfully validating the OTP
-      router.replace("/screen/Auth/ForgotPassword/ResetPassword");
-    } else {
-      Alert.alert("Invalid OTP", "Please enter a valid 4-digit OTP.");
+      router.replace("/(tabs)/home");
+      console.log(otp);
+    } catch (error) {
+      const errorMsg = (error as any).response?.data?.message;
+      Alert.alert("Error", errorMsg);
+      console.log("error submitting OTP", errorMsg);
+    } finally {
+      setIsLoading(false);
     }
-    console.log(otp);
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     // Logic to resend OTP (e.g., calling API to send OTP)
-    Alert.alert("OTP Sent", "A new OTP has been sent to your email or phone.");
+    setIsLoading(true);
+    try {
+      if (phone) {
+        await sendOtp(phone);
+      } else if (email) {
+        await sendEmailOtp(email);
+      }
+      Alert.alert(
+        "OTP Sent",
+        "A new OTP has been sent to your email or phone."
+      );
+    } catch (error) {
+      const errorMsg = (error as any).response?.data?.message;
+      Alert.alert("Error", errorMsg);
+      console.log("error resending OTP", errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
+      <Stack screenOptions={{ headerShown: false }} />
       <Text style={styles.headerText}>Enter OTP</Text>
 
       <Text style={styles.instructionText}>
-        We have sent a 4-digit OTP to your registered email or phone number.
+        We have sent a 5-digit OTP to your registered email or phone number.
       </Text>
 
       {/* OTP Input Fields */}
@@ -52,24 +106,42 @@ const OtpScreen = () => {
         {otp.map((digit, index) => (
           <TextInput
             key={index}
+            ref={(el) => {
+              if (el) otpInputs.current[index] = el;
+            }}
             style={styles.otpInput}
             keyboardType="numeric"
             maxLength={1}
             value={digit}
+            autoFocus={index === 0}
             onChangeText={(value) => handleOtpChange(value, index)}
+            onKeyPress={({ nativeEvent }) => {
+              if (nativeEvent.key === "Backspace") handleBackSpace(index);
+            }}
           />
         ))}
       </View>
 
       {/* Submit Button */}
-      <Pressable style={styles.submitButton} onPress={handleSubmitOtp}>
-        <Text style={styles.submitButtonText}>Verify OTP</Text>
+      <Pressable
+        style={[
+          styles.submitButton,
+          isLoading && { backgroundColor: "#9A9A9A" },
+        ]}
+        onPress={() => handleSubmitOtp}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Verify OTP</Text>
+        )}
       </Pressable>
 
       {/* Resend OTP */}
       <View style={styles.resendContainer}>
         <Text style={styles.resendText}>Didn't receive the OTP?</Text>
-        <Pressable onPress={handleResendOtp}>
+        <Pressable onPress={handleResendOtp} disabled={isLoading}>
           <Text style={styles.resendLink}>Resend OTP</Text>
         </Pressable>
       </View>

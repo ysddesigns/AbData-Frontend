@@ -4,15 +4,12 @@ import { router } from "expo-router";
 import TransactionButton from "@/components/Button/TransactionButton";
 import { useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
+import formattedBalance from "@/util/functions";
 
 const Assets: React.FC = () => {
   const [showAsset, setShowAsset] = useState(true);
   const { walletBalance } = useWallet();
   // format wallet balance with comma seoerators
-  const formattedBalance = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 3,
-  }).format(walletBalance);
 
   const iconName = showAsset ? "eye" : "eye-off-sharp";
   const toggleShowAsset = () => {
@@ -22,8 +19,8 @@ const Assets: React.FC = () => {
   const depositBtn = () => {
     router.push("/screen/Wallet/Funding/AddFunds");
   };
-  const withdraw = () => {
-    router.push("/screen/Wallet/Withdrwal/Withdrawal");
+  const buyData = () => {
+    router.push("/screen/Transactions/Data/BuyData");
   };
   const transfer = () => {};
 
@@ -45,7 +42,7 @@ const Assets: React.FC = () => {
           {showAsset ? (
             <Text style={[styles.text, styles.balanceText]}>
               <Text style={{ fontSize: 14 }}>₦ {""}</Text>
-              {formattedBalance}
+              {formattedBalance(walletBalance)}
             </Text>
           ) : (
             <Text style={styles.text}>*******</Text>
@@ -67,14 +64,14 @@ const Assets: React.FC = () => {
           />
           {/* Withdraw Button */}
           <TransactionButton
-            buttonName="Withdraw"
-            iconName="download"
-            onpress={withdraw}
+            buttonName="Data"
+            iconName="wifi"
+            onpress={buyData}
           />
           {/* Transfer Button */}
           <TransactionButton
-            buttonName="Transfer"
-            iconName="share"
+            buttonName="Airtime"
+            iconName="phone-portrait"
             onpress={transfer}
           />
         </View>
