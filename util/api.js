@@ -11,13 +11,30 @@ export const sendOtp = async (phone) => {
 };
 
 export const sendEmailOtp = async (email) => {
-  return axios.post(`/send-email-otp`, { email });
+  return api.post(`/send-email-otp`, { email });
 };
 
 export const verifyOtp = async (phone, otp) => {
-  return axios.post(`/verify-otp`, { phone, otp });
+  return api.post(`/verify-otp`, { phone, otp });
 };
 
 export const verifyEmailOtp = async (email, otp) => {
-  return axios.post(`/verify-email-otp`, { email, otp });
+  return api.post(`/verify-email-otp`, { email, otp });
+};
+
+export const signupUser = async (userData) => {
+  const res = await api.post(
+    "https://auth-backend-8fxa.onrender.com/api/auth/register",
+    userData,
+    { timeout: 30000 }
+  );
+  return res.data;
+};
+export const loginUser = async (credentials) => {
+  const res = await api.post(
+    "https://auth-backend-8fxa.onrender.com/api/auth/login",
+    credentials,
+    { timeout: 30000 }
+  );
+  return res.data;
 };

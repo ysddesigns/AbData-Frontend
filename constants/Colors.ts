@@ -15,14 +15,16 @@ export const Colors = {
     tabIconDefault: "#687076",
     tabIconSelected: tintColorLight,
     inputBackground: "rgba(255, 255, 255, 0.79)",
+    inputBorder: "rgba(87, 91, 88, 0.79)",
   },
   dark: {
     text: "#ECEDEE",
-    background: "rgba(2, 29, 12, 0.2)",
+    background: "rgba(4, 25, 12, 0.72)",
     tint: tintColorDark,
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",
     tabIconSelected: tintColorDark,
-    inputBackground: "rgba(255, 255, 255, 0.79)",
+    inputBackground: "rgba(85, 100, 90, 0.79)",
+    inputBorder: "rgba(84, 85, 84, 0.79)",
   },
 };

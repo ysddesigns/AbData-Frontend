@@ -10,13 +10,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useWallet } from "@/hooks/useWallet";
 import { Colors } from "@/constants/Colors";
+import { useMutation } from "@tanstack/react-query";
+import { loginUser } from "@/util/api";
 
 const Text = ThemedText;
 const View = ThemedView;
@@ -25,15 +24,23 @@ const Login = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme || "light"];
   const [emailOrPhone, setEmailOrPhone] = useState("");
-  // const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [success, setSuccess] = useState("");
 
   const { username, setUsername, password, setPassword } = useWallet();
 
-  const [Error, setError] = useState("");
-
-  const [isLoading, setIsLoading] = useState(false);
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      console.log("login data", data);
+      router.replace("/(tabs)/home");
+    },
+    onError: (error) => {
+      const errorMsg =
+        (error as any).response?.data?.error || "Something went wrong";
+      console.log("error login", error);
+      console.log("ErrorMsg", errorMsg);
+    },
+  });
 
   const handleLogin = async () => {
     if (!emailOrPhone || !password) {
@@ -44,29 +51,11 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
-    // Placeholder for successful login
-    try {
-      const res = await axios.post(
-        "https://auth-backend-8fxa.onrender.com/api/auth/login",
-        { credential: emailOrPhone, password }
-      );
-      // successful login
-      console.log("login successful");
-      // store token in asyncstorage
-      // await AsyncStorage.setItem("userToken", user.uid);
-      router.replace("/(tabs)/home");
-      return res.data;
-    } catch (error) {
-      const errorMsg = (error as any).response?.data?.message;
-      Alert.alert("Error", errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
+    mutation.mutate({ credential: emailOrPhone, password });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <Text style={styles.headerText}>Login</Text>
 
@@ -110,6 +99,10 @@ const Login = () => {
           />
         </Pressable>
       </View>
+      {/* On Error */}
+      {mutation.status === "error" && (
+        <Text style={styles.errorText}>Invalid Credential</Text>
+      )}
 
       {/* Forgot Password */}
       <TouchableOpacity
@@ -122,13 +115,16 @@ const Login = () => {
 
       {/* Login Button */}
       <TouchableOpacity
-        style={[styles.loginButton, isLoading && styles.isdisableButton]}
+        style={[
+          styles.loginButton,
+          mutation.status === "pending" && styles.isdisableButton,
+        ]}
         // onPress={() => router.push("/home")}
         onPress={handleLogin}
-        disabled={isLoading}
+        disabled={mutation.status === "pending"}
       >
-        {isLoading ? (
-          <ActivityIndicator />
+        {mutation.status === "pending" ? (
+          <ActivityIndicator color={"#fff"} />
         ) : (
           <Text style={styles.loginButtonText}>Login</Text>
         )}
@@ -154,6 +150,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     // marginTop: 100,
   },
+  errorText: {
+    color: "red",
+  },
   headerText: {
     fontSize: 28,
     fontWeight: "700",
@@ -164,8 +163,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderColor: "#EDEDED",
-    borderWidth: 1,
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,

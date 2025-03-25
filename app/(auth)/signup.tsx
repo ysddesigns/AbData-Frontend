@@ -12,17 +12,17 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import axios from "axios";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { ThemedText as Text } from "@/components/ThemedText";
+import { ThemedView as View } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { sendOtp, sendEmailOtp } from "@/util/api";
+import { sendOtp, sendEmailOtp, signupUser } from "@/util/api";
+import { useMutation } from "@tanstack/react-query";
 
-const Text = ThemedText;
-const View = ThemedView;
-
+/*
+Add a rollback endpoint whereby when a user created and failed to send otp it will rollback the account creation
+*/
 const Signup = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme || "light"];
@@ -32,7 +32,30 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: signupUser,
+    onSuccess: async (data) => {
+      console.log("register data", data);
+
+      try {
+        await Promise.all([sendOtp(phone), sendEmailOtp(email)]);
+      } catch (error) {
+        Alert.alert("Error", "Failed to send OTP, Please try again");
+        console.log("OTP error", error);
+      }
+      router.replace({
+        pathname: "/Verification",
+        params: { phone, email },
+      });
+    },
+    onError: (error) => {
+      const errorMsg =
+        (error as any).response?.data?.error || "Something went wrong";
+      console.log("error", error);
+      Alert.alert("Signup Failed", errorMsg);
+    },
+  });
 
   const handleSignup = async () => {
     //  validation and sign-up logic here
@@ -46,41 +69,9 @@ const Signup = () => {
     if (password !== rePassword) {
       Alert.alert("Error"), "Password do not match";
     }
-    setIsLoading(true);
 
-    try {
-      const user = { name: fullName, email, phone, password };
-
-      console.log("Sending data:", user); // Log request data
-
-      const res = await axios.post(
-        "https://auth-backend-8fxa.onrender.com/api/auth/register",
-        user,
-        { timeout: 30000 }
-      );
-      if (res.data) {
-        console.log("user created successfully:", user);
-        if (phone) {
-          await sendOtp(phone);
-          console.log("phone OTP sent");
-        } else if (email) {
-          await sendEmailOtp(email);
-          console.log("Email OTP sent");
-        }
-
-        router.replace({
-          pathname: "/screen/Auth/ForgotPassword/EnterOTP",
-          params: { phone, email },
-        });
-      }
-    } catch (error) {
-      const errorMsg =
-        (error as any).response?.data?.error || "Something went wrong";
-      Alert.alert("Signup Failed", errorMsg);
-      console.log("Error creating user:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    const user = { name: fullName, email, phone, password };
+    mutation.mutate(user);
   };
 
   return (
@@ -189,12 +180,12 @@ const Signup = () => {
         <TouchableOpacity
           style={[
             styles.signupButton,
-            isLoading && { backgroundColor: "#9A9A9" },
+            mutation.status === "pending" && { backgroundColor: "#9A9A9" },
           ]}
           onPress={handleSignup}
-          disabled={isLoading} //prevent multple clicks
+          disabled={mutation.status === "pending"} //prevent multple clicks
         >
-          {isLoading ? (
+          {mutation.status === "pending" ? (
             <ActivityIndicator size={20} color={"#fff"} />
           ) : (
             <Text style={styles.signupButtonText}>Create Account</Text>
@@ -218,8 +209,6 @@ export default Signup;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // padding: 20,
-    // justifyContent: "center",
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -236,8 +225,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderColor: "#EDEDED",
-    borderWidth: 1,
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
@@ -247,15 +234,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
   },
-  // signupButton: {
-  //   backgroundColor: "#007AFF",
-  //   paddingVertical: 15,
-  //   borderRadius: 8,
-  //   alignItems: "center",
-  //   marginVertical: 20,
-  //   flexDirection: "row",
-  //   justifyContent: "center",
-  // },
   signupButton: {
     backgroundColor: "#007AFF",
     paddingVertical: 15,
