@@ -122,7 +122,7 @@ const Withdrawal: React.FC = () => {
         onRedirect={handleOnRedirect}
         options={{
           tx_ref: transactionRef,
-          authorization: `{$process.env.FLW_SECRET}`,
+          authorization: `{$.FLW_SECRET}`,
           customer: {
             email: "yusufbyusufgwarmai@gmail.com",
           },
